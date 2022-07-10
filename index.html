@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- google font 字型 -->
+  <link href="https://fonts.googleapis.com/css2?family=Hurricane&family=Londrina+Solid:wght@100;300;400;900&family=Permanent+Marker&display=swap" rel="stylesheet">
+  <title>打幽靈小遊戲</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      box-sizing: border-box;
+      font-family: 'Permanent Marker', cursive;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      background-image: linear-gradient(180deg, #222 60%, gray 100%);
+    }
+
+    #cover {
+      width: 100vw;
+      height: 100vh;
+      background: url('https://cdn.pixabay.com/photo/2014/11/26/03/52/foggy-545838_960_720.jpg') no-repeat center center/cover;
+      
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+
+      /* 設定高一點, 才可以在最上層 */
+      position: absolute;
+      z-index: 20;
+    }
+
+    /* 按鈕區域 */
+    #button {
+      width: 30%;
+      height: 10%;
+      cursor: pointer;
+
+      display: flex;
+
+      position: absolute;
+      left: 50%;
+      top: 90%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* 為了加入 hand.png / hand1.png 的圖片, 要加入的定位點 */
+    #button .btn-outside {
+      width: 50%;
+      height: 100%;
+
+      position: relative;
+    }
+
+    /* 按鈕樣式 */
+    #button .btn {
+      width: 100%;
+      height: 100%;
+      border-radius: 50px 0 50px 0;
+      box-shadow: inset -5px -5px 10px #000;
+      font-size: 1.5rem;
+      font-weight: bolder;
+      color: white;
+      background: transparent;
+      border: 5px solid red;
+    }
+
+    #rule-content {
+      width: 60%;
+      height: 50%;
+      background: rgb(52, 80, 116);
+      border-radius: 100px 0 100px 0;
+
+      display: none;
+      flex-direction: column;
+      justify-content: space-evenly;
+
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    #rule-content #cross-x {
+      width: 6%;
+      height: 10%;
+      font-size: 1.5rem;
+      border: 3px solid white;
+      color: white;
+      cursor: pointer;
+
+      position: absolute;
+      right: 0;
+      top: 0;
+    }
+
+    #rule-content div {
+      height: 25%;
+
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    #rule-content div img {
+      height: 90%;
+    }
+
+    #rule-content div p {
+      width: 60%;
+      font-size: 2rem;
+      font-weight: bolder;
+      color: white;
+    }
+
+    #bg {
+      width: 100vw;
+      height: 100vh;
+      /* 插入左右兩張背景圖 */
+      background:
+      url('./images/bg-left.png') no-repeat left top/auto 100%,
+      url('./images/bg-right.png') no-repeat right top/auto 100%;
+
+      position: relative;
+    }
+
+    /* 背景遮罩 */
+    #bg::before {
+      content: '';
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+
+      position: absolute;
+      z-index: 1;
+    }
+
+    /* 紀錄分數 */
+    #score {
+      width: 25%;
+      height: 100%;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      
+      /* 定位左側 */
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+    }
+
+    #score p {
+      font-size: 3rem;
+      font-weight: bolder;
+      color: white;
+      padding: 0 0 2rem 0;
+    }
+
+    /* 中間區域(主要區域) */
+    #container {
+      width: 50%;
+      height: 100%;
+
+      display: flex;
+      justify-content: center;
+      
+      /* 定位中間 */
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+    }
+
+    /* 平板本身 */
+    #phone {
+      width: 75%;
+      border: 1px solid #000;
+      border-radius: 30px;
+      background-image: linear-gradient(45deg, #555 20%, #ccc 40%, #555 60%, #ccc 80%);
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      position: relative;
+    }
+
+    /* 平板上方的通訊孔 */
+    #phone::before {
+      content: '';
+      width: 10%;
+      height: 2%;
+      border-radius: 15px;
+      background: #000;
+
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translate(-50%, 100%);
+    }
+
+    /* 遊戲開始 */
+    #btn-start {
+      width: 30%;
+      height: 15%;
+      border: 10px solid #999;
+      border-radius: 100px;
+      background: red;
+      font-size: 2rem;
+      font-weight: bolder;
+      color: white;
+      cursor: url('./images/cursor_black.png') 50 50, auto;
+
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* 平板下方的按鈕 */
+    #btn-none {
+      width: 8%;
+      height: 4.5%;
+      border-radius: 50px;
+      background: #000;
+      border: 2.5px solid white;
+      cursor: pointer;
+
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translate(-50%, -20%);
+    }
+
+    /* 遊戲區域 */
+    #phone_game {
+      width: 95%;
+      height: 88%;
+      border: 1px solid #000;
+      background: url('https://cdn.pixabay.com/photo/2014/11/26/03/52/foggy-545838_960_720.jpg') no-repeat center center/cover;
+      cursor: url('./images/cursor_black.png') 50 50, auto;
+      display: flex;
+
+      position: relative;
+    }
+
+    /* 霧的特效 */
+    #mist {
+      /* 整版 */
+      width: 100%;
+      height: 100%;
+      /* 混和特效 */
+      mix-blend-mode: screen;
+      /* 讓替代元素可以填滿整個父元素 */
+      object-fit: cover;
+      /* 解決幽靈空間 */
+      vertical-align: middle;
+      /* 要設定這一個, 才可以按到下方的東西, 忽略這層事件 */
+      pointer-events: none;
+      
+      /* 為了讓這個特效可以在最上層不被覆蓋, 使用定位(定位才可以下 z-index) */
+      position: absolute;
+      /* 要在最上層, 所以 z-index: 數字設高一點 */
+      z-index: 10;
+    }
+
+    /* 區域遊戲的遊戲軌道 */
+    .block {
+      width: 20%;
+      overflow: hidden;
+
+      position: relative;
+    }
+
+    /* 遊戲區域軌道內的幽靈圖片大小 */
+    #phone_game .block img {
+      width: 90%;
+
+      /* 因為要移動, 所以要定位 */
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+
+      /* 無法被選取 */
+      user-select: none;
+      /* 無法拖曳 */
+      -webkit-user-drag: none;
+      -webkit-user-select: none;
+    }
+
+    /* 遊戲區域軌道內的 boss 幽靈血量條大小 */
+    #phone_game .block .blood {
+      width: 60%;
+      height: 1%;
+      background: red;
+
+      /* 要移動所以要定位 */
+      position: absolute;
+    }
+
+    /* 按遊戲 #btn-start 按鈕後, 倒數 3 2 1 */
+    #countdown_start {
+      width: 50%;
+      height: 40%;
+      color: rgba(255, 0, 0, 0.7);
+      font-weight: bolder;
+      font-size: 10rem;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      /* 在平板螢幕中央 */
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* 計時時間 */
+    #time {
+      width: 25%;
+      height: 100%;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      /* 右側 */
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 2;
+    }
+
+    #time p {
+      font-size: 3rem;
+      font-weight: bolder;
+      color: white;
+      padding: 0 0 2rem 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- 遊戲封面 -->
+  <div id="cover">
+    <img src="./images/background.png">
+    <div id="button">
+      <div class="btn-outside"><input type="button" value="Enter Game" id="btn-enter" class="btn"></div>
+      <div class="btn-outside"><input type="button" value="rule" id="btn-rule" class="btn"></div>
+    </div>
+    <div id="rule-content">
+      <div id="cross-x">X</div>
+      <div><img src="./images/ghost_boss.png"><p>連續點擊 3次，加 5分</p></div>
+      <div><img src="./images/ghost_happy.png"><p>點擊 1次，加 1分</p></div>
+      <div><img src="./images/ghost_sad.png"><p>點擊 1次，扣 1分</p></div>
+    </div>
+  </div>
+
+  <!-- 遊戲介面 -->
+  <div id="bg">
+    <!-- 紀錄分數 -->
+    <div id="score">
+      <p>score</p>
+      <p id="text-score">0</p>
+    </div>
+    <!-- 遊戲區域 -->
+    <div id="container">
+      <div id="phone">
+        <div id="phone_game">
+          <!-- 加入霧的特效 -->
+          <video src="./vedio/4 Ground Fog Whispy.mp4" id="mist" autoplay loop></video>
+        </div>
+        <input type="button" value="start" id="btn-start">
+        <input type="button" id="btn-none">
+      </div>
+    </div>
+    <!-- 紀錄時間 -->
+    <div id="time">
+      <p>time</p>
+      <p id="text-time">0</p>
+    </div>
+  </div>
+
+  <!-- 使用 jQuery 的連結 -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js' integrity='sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==' crossorigin='anonymous'></script>
+  <!-- 使用 sweetalert 的連結 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+
+    // 在遊戲區域內加入遊戲軌道
+    for (let i=0; i<5; i++) {
+      $('#phone_game').append(`
+      <div class="block"></div>
+      `)
+    }
+
+    // 點擊 #btn-enter 進入遊戲介面
+    $('#btn-enter').on('click', function () {
+      // 遊戲封面點擊進入遊戲動畫
+      $('#button .btn-outside').eq(0).append(`<img class="hand" src="./images/hand1.png" style="position: absolute; left: 0; top: 0; bottom: 0; right: 0; margin: auto;">`)
+      setTimeout(function () {
+        $('#button .hand').attr('src', './images/hand.png')
+        $('#btn-enter').css({background: 'white', color: 'black'})
+      }, 500)
+      setTimeout(function () {
+        $('#button .hand').css('display', 'none')
+      }, 1000)
+      // 遊戲封面不見
+      setTimeout(function () {
+        $('#btn-enter').css({background: 'transparent', color: 'white'})
+        $('#cover').remove()
+      }, 1500)
+    })
+
+    // 點擊 #btn-rule 進入規則介紹
+    $('#btn-rule').on('click', function () {
+      // 遊戲封面點擊進入遊戲動畫
+      $('#button .btn-outside').eq(1).append(`<img class="hand" src="./images/hand1.png" style="position: absolute; left: 0; top: 0; bottom: 0; right: 0; margin: auto;">`)
+      setTimeout(function () {
+        $('#button .hand').attr('src', './images/hand.png')
+        $('#btn-rule').css({background: 'white', color: 'black'})
+      }, 500)
+      setTimeout(function () {
+        $('#button .hand').css('display', 'none')
+      }, 1000)
+      // 打開規則介紹說明
+      setTimeout(function () {
+        $('#rule-content').css('display', 'flex')
+      }, 1500)
+    })
+
+    // 點擊 #cross-x 關閉遊戲介紹說明
+    $('#cross-x').on('click', function () {
+      $('#rule-content').css('display', 'none')
+      $('#btn-rule').css({background: 'transparent', color: 'white'})
+    })
+
+    // 分數
+    let score = 0
+    // 倒數
+    let countdown = 30
+    // 遊戲的計時器
+    let timer1 = 0
+    // 控制 boss 幽靈只能在空間內出現 1 次
+    let boss = []
+
+    // 設立一個幽靈下降的 function
+    function move (ghost) {
+      ghost.animate({top: '+=15px'},50,function () {
+        move(ghost)
+      })
+    }
+
+    $('#btn-start').on('click', function () {
+      // 按鈕按了一次後被禁用
+      $(this).attr('disabled', true)
+      // 禁用, 所以修改按鈕的顏色
+      $(this).css('display', 'none')
+
+      // 平板螢幕中央出現 '3,2,1' 倒數遊戲開始
+      $('#phone_game').append(`
+      <div id="countdown_start">3</div>
+      `)
+      let time = 3
+      const timer = setInterval(function () {
+        time--
+        $('#countdown_start').text(time)
+        if (time === 0) {
+          // 停止計時器
+          clearInterval(timer)
+          $('#countdown_start').text('start')
+          $('#countdown_start').css('fontSize', '5rem')
+          setTimeout(function () {
+            // 倒數結束後消失
+            $('#countdown_start').remove()
+          }, 500)
+        }
+      }, 1000)
+
+      // 重設分數和時間 (如果要玩 1 次以上時)
+      score = 0
+      $('#text-score').text(score)
+      countdown = 30
+      $('#text-time').text(countdown)
+
+      // 開始遊戲
+      // 控制幽靈出現的次數
+      setTimeout(function () {
+        timer1 = setInterval(function () {
+          // 倒數
+          countdown--
+          $('#text-time').text(countdown)
+
+          // 用做控制出現哪種類型的幽靈
+          const random = Math.round(Math.random() * 9)
+          // 用做控制幽靈要出現在哪一個軌道
+          const block = Math.round(Math.random() * 4)
+          if (random >= 8 && $('.ghost-boss').length < 1) {
+            // 亂數 8、9 出現幽靈 boss 和 幽靈 boss 只能出現一隻
+            const ghost_boss = $(`<img class="ghost-boss" src="./images/ghost_boss.png">`)
+            const blood = $(`<div class="blood"></div>`)
+            $('#phone_game .block').eq(block).append(ghost_boss)
+            move(ghost_boss)
+            // boss 幽靈還要加上血量條
+            $('#phone_game .block').eq(block).append(blood)
+            move(blood)
+          } else if (random >=5) {
+            // 亂數 5~7 出現幽靈 sad
+            const ghost_sad = $(`<img class="ghost-sad" src="./images/ghost_sad.png">`)
+            $('#phone_game .block').eq(block).append(ghost_sad)
+            move(ghost_sad)
+          } else {
+            // 亂數 0~4 出現幽靈 happy
+            const ghost_happy = $(`<img class="ghost-happy" src="./images/ghost_happy.png">`)
+            $('#phone_game .block').eq(block).append(ghost_happy)
+            move(ghost_happy)
+          }
+
+          // 因為遊戲區域最多只出現一次 ghost-boss, 所以如果沒按到跑到遊戲區域外, 就將 ghost-boss 清空, 讓下一次的 ghost-boss 出來
+          console.log($('.ghost-boss').length)
+          if (parseInt($('.ghost-boss').css('top')?.replace('px','')) > parseInt($('#phone').css('height')?.replace('px',''))) {
+            $('.ghost-boss').remove()
+            $('.blood').remove()
+          }
+
+          // 倒數到 0 之後, 停下遊戲
+          if (countdown <= 0) {
+            // 停止計時器
+            clearInterval(timer1)
+            // 將按鈕'禁用'啟用回來
+            $('#btn-start').attr('disabled', false)
+            // 將按鈕樣式恢復回來
+            $('#btn-start').css('display', 'block')
+            // 清除遊戲區域
+            $('#phone_game .block img').remove()
+            $('#phone_game .block .blood').remove()
+            Swal.fire({
+              title: 'the end of the game',
+              text: `Time's up, you get ${score} point`,
+              icon: 'info'
+            })
+          }
+        }, 1000)
+      }, 3000)
+    })
+
+    // 按到 happy 時
+    $('#phone_game .block').on('click', '.ghost-happy', function () {
+      $(this).attr('src', './images/ghost_die.png')
+      $(this).removeClass('ghost-happy').addClass('ghost-die')
+      setTimeout(function () {
+        $('.ghost-die').remove()
+      }, 300)
+      score++
+      $('#text-score').text(score)
+      boss.splice(0, boss.length)
+    })
+
+    // 按到 sad 時
+    $('#phone_game .block').on('click', '.ghost-sad', function () {
+      $(this).attr('src', './images/ghost_shock.png')
+      $(this).removeClass('ghost-sad').addClass('ghost-shock')
+      setTimeout(function () {
+        $('.ghost-shock').remove()
+      }, 300)
+      score--
+      $('#text-score').text(score)
+      boss.splice(0, boss.length)
+    })
+
+    // 按到 boss 時
+    $('#phone_game .block').on('click', '.ghost-boss', function () {
+      // 點擊 ghost-boss 1 次, 會在 boss 陣列儲存 '1'
+      boss.push('1')
+      // boss 陣列儲存 3 次 '1', 相當於點了 ghost-boss 3 次
+      if (boss.length === 3) {
+        $(this).attr('src', './images/ghost_die.png')
+        $(this).removeClass('ghost-boss').addClass('ghost-die')
+        setTimeout(function () {
+          $('.ghost-die').remove()
+        }, 300)
+        $('.blood').remove()
+        score+=5
+        $('#text-score').text(score)
+        // 執行完點擊 ghost-boss 3 次要做的事情後, 將 boss 陣列清空, 以做下次使用
+        boss.splice(0, boss.length)
+      } else if (boss.length === 2) {
+        // boss 陣列儲存 2 次 '1', 相當於點了 ghost-boss 2 次
+        $('.blood').css('width', '20%')
+      } else if (boss.length === 1) {
+        // boss 陣列儲存 1 次 '1', 相當於點了 ghost-boss 1 次
+        $('.blood').css('width', '40%')
+      }
+    })
+  </script>
+</body>
+</html>
